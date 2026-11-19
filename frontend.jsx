@@ -8,6 +8,38 @@ function LandingPage({ onHostGame, onJoinGame }) {
   const [joinCode, setJoinCode] = useState("");
   const [joinName, setJoinName] = useState("");
   const [error, setError] = useState("");
+  const [serverStatus, setServerStatus] = useState("checking"); // "checking" | "waking" | "online"
+
+  useEffect(() => {
+    let isMounted = true;
+    let timer = null;
+
+    const checkServer = async (attempt = 1) => {
+      try {
+        const res = await fetch(`${API}/health`, { method: "GET" });
+        if (res.ok && isMounted) {
+          setServerStatus("online");
+          return;
+        }
+      } catch (err) {
+        // Server might be sleeping on free tier
+      }
+
+      if (isMounted) {
+        if (attempt >= 2) {
+          setServerStatus("waking");
+        }
+        // Poll every 3 seconds to keep waking the server up
+        timer = setTimeout(() => checkServer(attempt + 1), 3000);
+      }
+    };
+
+    checkServer();
+    return () => {
+      isMounted = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   const handleJoin = async () => {
     if (!joinCode.trim() || !joinName.trim()) {
@@ -19,7 +51,7 @@ function LandingPage({ onHostGame, onJoinGame }) {
       if (!res.ok) { setError("Quiz not found"); return; }
       onJoinGame(joinCode.trim().toUpperCase(), joinName.trim());
     } catch {
-      setError("Cannot reach server");
+      setError("Cannot reach server. It may still be waking up.");
     }
   };
 
@@ -37,6 +69,46 @@ function LandingPage({ onHostGame, onJoinGame }) {
           <span className="logo-text">QUIZARRE</span>
         </div>
         <p className="tagline">THINK FAST ACT FASTER!!</p>
+
+        {serverStatus === "waking" && (
+          <div style={{
+            maxWidth: "460px",
+            margin: "12px auto 0 auto",
+            padding: "8px 16px",
+            background: "rgba(245, 158, 11, 0.15)",
+            border: "1px solid rgba(245, 158, 11, 0.4)",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+            color: "#fcd34d",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px"
+          }}>
+            <span style={{ fontSize: "1.1rem" }}>⏳</span>
+            <span>Waking up free cloud backend... Ready in ~30s</span>
+          </div>
+        )}
+
+        {serverStatus === "online" && (
+          <div style={{
+            maxWidth: "240px",
+            margin: "10px auto 0 auto",
+            padding: "4px 12px",
+            background: "rgba(16, 185, 129, 0.12)",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
+            borderRadius: "20px",
+            fontSize: "0.76rem",
+            color: "#6ee7b7",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px"
+          }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", display: "inline-block" }}></span>
+            <span>Backend Online & Ready</span>
+          </div>
+        )}
       </header>
 
       <main className="landing-main">

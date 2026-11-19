@@ -1,93 +1,98 @@
-# ⚡ Quizarre (Production Hybrid Vercel Deployment)
+# ⚡ Quizarre (100% Free Production Deployment)
 
-A full-stack real-time quiz platform with buzzer synchronization, built for high-scale, zero-downtime production deployment.
+A full-stack real-time quiz platform with buzzer synchronization, designed to run **100% free** on cloud providers: **Vercel** for the frontend and **Render** (or Koyeb) for the WebSocket backend.
 
 ---
 
-## 🏛️ Production Architecture (Option B: Hybrid)
+## 🏛️ Architecture & Free Tier Lifecycle
 
 ```
 ┌────────────────────────────────────────────────────────┐
 │                   Vercel Edge Network                  │
 │       React Frontend (index.html, frontend.jsx, css)   │
-│             Global CDN • SSL • Zero Cold Starts        │
+│             Global CDN • SSL • 100% Free Always        │
 └───────────────────────────┬────────────────────────────┘
                             │ REST (HTTPS) + WebSocket (WSS)
 ┌───────────────────────────▼────────────────────────────┐
-│         FastAPI Backend (Railway / Render / Docker)    │
-│            Persistent Event Loop & WebSocket Hub       │
-│      /api/upload-csv   /api/quiz/create   /ws/{id}/{p} │
+│              Render Free Web Service                   │
+│      FastAPI Persistent Event Loop & WebSocket Hub     │
+│  (Sleeps when inactive • Auto-wakes on user visit)     │
 └─────────────┬────────────────────────────┬─────────────┘
               │                            │
      ┌────────▼────────┐          ┌────────▼────────┐
-     │  Shared Redis   │          │   PostgreSQL    │
-     │ (Upstash / Cloud│          │ (Neon / Supabase│
-     │ Buzzer ZSET ms  │          │ Persistent DB   │
+     │  Upstash Redis  │          │  Neon Postgres  │
+     │ 10,000 req/day  │          │   0.5 GB Free   │
+     │   100% Free     │          │   100% Free     │
      └─────────────────┘          └─────────────────┘
 ```
 
----
-
-## 🚀 Deployment Guide
-
-### Part 1: Deploy Backend (Railway or Render)
-
-1. **Push this `Quizarre_Vercel` repository to GitHub**.
-2. **Deploy on Railway** (or Render):
-   - Go to [railway.app](https://railway.app) and create a **New Project** → **Deploy from GitHub repo**.
-   - Railway will automatically detect the `Dockerfile` or `Procfile`.
-3. **Add Managed Redis & Postgres**:
-   - In Railway, click **+ New** → **Database** → **Redis**.
-   - Click **+ New** → **Database** → **PostgreSQL**.
-   - Railway automatically sets `REDIS_URL` and `DATABASE_URL` for your service!
-   *(Alternatively, use free [Upstash Redis](https://upstash.com) and [Neon Postgres](https://neon.tech) and paste the connection strings into the Environment Variables tab).*
-4. **Copy your Backend URL**:
-   - In Railway service settings, click **Generate Domain** (e.g. `https://quizarre-backend.up.railway.app`).
+> **💤 Auto-Wake UX**: When the backend sleeps on Render's free tier, the frontend automatically pings `/health` upon page load. A sleek banner informs the user (*"Waking up free cloud backend... Ready in ~30s"*). Once awake, it turns green and runs at lightning speed with zero interruptions!
 
 ---
 
-### Part 2: Deploy Frontend to Vercel
+## 🚀 100% Free Deployment Guide
 
-1. **Configure Backend URL**:
-   - Open [`config.js`](file:///config.js) and paste your backend URL:
-     ```javascript
-     window.QUIZARRE_CONFIG = {
-       BACKEND_URL: "https://quizarre-backend.up.railway.app"
-     };
-     ```
-2. **Deploy with Vercel**:
-   - Go to [vercel.com](https://vercel.com) → **Add New Project** → Import your repository.
-   - **Framework Preset**: Select `Other`.
-   - **Build & Output Settings**: Leave defaults (no build command needed; Vercel CDN serves static files directly).
+### Step 1: Deploy Backend to Render (100% Free)
+
+1. Sign up for free at [render.com](https://render.com) (login with your GitHub account).
+2. Click **New +** → **Web Service**.
+3. Select your repository: **`BMTushyath/Quizarre_Vercel`**.
+4. Configure the service:
+   - **Name**: `quizarre-backend`
+   - **Region**: Choose closest to you (e.g. Frankfurt, Oregon, Singapore).
+   - **Runtime**: `Python`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type**: Select **Free** (0.1 CPU, 512 MB RAM).
+5. (Optional - Databases):
+   - You can run out of the box with zero databases (uses built-in SQLite & FakeRedis).
+   - Or add free cloud databases in the **Environment Variables** section:
+     - `REDIS_URL`: from [Upstash](https://upstash.com) (Free Redis)
+     - `DATABASE_URL`: from [Neon](https://neon.tech) (Free Postgres)
+6. Click **Create Web Service**.
+7. Once deployed, copy your Render URL:
+   `https://quizarre-backend.onrender.com`
+
+---
+
+### Step 2: Connect Frontend to Render & Deploy on Vercel
+
+1. Open [`config.js`](file:///config.js) and paste your Render URL:
+   ```javascript
+   window.QUIZARRE_CONFIG = {
+     BACKEND_URL: "https://quizarre-backend.onrender.com"
+   };
+   ```
+2. Commit and push:
+   ```bash
+   git add config.js
+   git commit -m "Update backend URL to Render"
+   git push
+   ```
+3. Deploy to Vercel:
+   - Go to [vercel.com](https://vercel.com) → **Add New Project**.
+   - Import `BMTushyath/Quizarre_Vercel`.
+   - Framework Preset: **Other**.
    - Click **Deploy**.
-3. Your quiz app is now live at `https://your-project.vercel.app`!
 
 ---
 
-## 🧪 Local Testing
+### Alternative Free Backend: Koyeb
 
-You can run the app locally with or without external databases:
+If you want an alternative to Render:
+- [koyeb.com](https://koyeb.com) offers a permanent **Free Eco Tier** with native WebSockets and automatic deployments from Docker or GitHub.
+
+---
+
+## 🧪 Local Development
+
+Run locally with automatic fallback (no cloud services required):
 
 ```bash
-# Optional: start real Redis and Postgres with Docker
-docker-compose up -d
-
-# Start backend
 python -m venv venv
 venv\Scripts\activate       # Windows
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Open `http://localhost:8000` (or `http://localhost:3000`).
-
----
-
-## 🔒 Environment Variables
-
-| Variable | Required | Description | Fallback |
-|---|---|---|---|
-| `PORT` | Optional | Port for the Uvicorn server | `8000` |
-| `REDIS_URL` | Optional | Genuine Redis connection string (`redis://...`) | In-memory `FakeRedis` |
-| `DATABASE_URL` | Optional | PostgreSQL connection string (`postgresql://...`) | Local SQLite (`quiz.db`) |
-| `ALLOWED_ORIGINS` | Optional | Allowed CORS domains (e.g. `https://*.vercel.app`) | `*` (All allowed) |
+Open `http://localhost:8000` in your browser.
