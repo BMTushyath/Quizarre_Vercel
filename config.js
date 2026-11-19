@@ -3,5 +3,5 @@
 // Put your deployed backend URL here (e.g. "https://quizarre-backend.up.railway.app")
 // Leave empty ("") when developing locally or running behind ngrok.
 window.QUIZARRE_CONFIG = {
-  BACKEND_URL: ""
+  BACKEND_URL: "https://quizarre-vercel.onrender.com"
 };
