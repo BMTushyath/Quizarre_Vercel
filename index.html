@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BuzzQuiz – Real-Time Quiz Platform</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+    <link rel="stylesheet" href="styles.css" />
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Runtime Deployment Config -->
+    <script src="config.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // --- BACKEND URL RESOLUTION ---
+      // Priority:
+      // 1. window.QUIZARRE_CONFIG.BACKEND_URL (set in config.js)
+      // 2. localStorage 'QUIZARRE_BACKEND_URL' (for quick browser testing)
+      // 3. window.location.origin (localhost, ngrok, or same-origin)
+      const configuredBackend = (window.QUIZARRE_CONFIG && window.QUIZARRE_CONFIG.BACKEND_URL) 
+        || localStorage.getItem("QUIZARRE_BACKEND_URL");
+
+      if (configuredBackend && configuredBackend.trim() !== "") {
+        window.BACKEND_URL = configuredBackend.trim().replace(/\/$/, "");
+      } else {
+        // Fallback for local testing
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+          window.BACKEND_URL = "http://localhost:8000";
+        } else {
+          window.BACKEND_URL = window.location.origin;
+        }
+      }
+      console.log("[Quizarre] Connecting to backend:", window.BACKEND_URL);
+    </script>
+    <script type="text/babel" src="frontend.jsx?v=12"></script>
+  </body>
+</html>
