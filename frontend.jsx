@@ -174,8 +174,9 @@ function HostView({ playerId, onBack }) {
       const msg = JSON.parse(e.data);
       if (msg.type === "state") setGameState(msg);
       if (msg.type === "wrong_answer") {
-        setEvents(prev => [{ id: Date.now() + Math.random(), icon: "❌", text: `${msg.name} guessed "${msg.guess}" (Wrong!)` }, ...prev].slice(0, 50));
-        setRecentWrong(`${msg.name} guessed: ${msg.guess || '?'}`);
+        const pen = msg.penalty ? ` (-${msg.penalty} pt)` : " (-1 pt)";
+        setEvents(prev => [{ id: Date.now() + Math.random(), icon: "❌", text: `${msg.name} guessed "${msg.guess}" (Wrong!${pen})` }, ...prev].slice(0, 50));
+        setRecentWrong(`${msg.name} guessed: ${msg.guess || '?'} (-1 pt)`);
         setTimeout(() => setRecentWrong(null), 3000);
       }
       if (msg.type === "correct_answer") {
@@ -754,7 +755,7 @@ function PlayerView({ quizId, playerId, playerName, onBack }) {
       <div className="player-header">
         <div className="player-info">
           <span className="p-name">{playerName}</span>
-          <span className="p-score">{scores[playerId] || 0} pts</span>
+          <span className="p-score">{scores[playerId] ?? 0} pts</span>
           {warnings > 0 && <span className="p-warning" title="Stay on the quiz tab!">⚠️ Warnings: {warnings}</span>}
         </div>
         <div className="room-tag">Room: {quizId}</div>

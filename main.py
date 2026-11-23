@@ -602,13 +602,18 @@ async def handle_message(quiz_id: str, player_id: str, data: dict):
             })
             await send_state(quiz_id)
         else:
+            # Jeopardy-style penalty: -1 point for incorrect answer on buzzer
+            quiz["scores"][player_id] = quiz["scores"].get(player_id, 0) - 1
             name = quiz["players"].get(player_id, {}).get("name", player_id)
             await broadcast(quiz_id, {
                 "type": "wrong_answer",
                 "player_id": player_id,
                 "name": name,
-                "guess": chosen
+                "guess": chosen,
+                "penalty": 1,
+                "scores": quiz["scores"],
             })
+            await send_state(quiz_id)
             # Advance to next in queue without revealing answer
             await advance_buzzer(quiz_id)
 
